@@ -59,19 +59,22 @@ function posicion_azar(){
     let y = (document.getElementsByClassName("game")[0].getBoundingClientRect().height)-35; //limete para pasar
     alimento_x = Math.floor(Math.random()*x);
     alimento_y = Math.floor(Math.random()*y);
-
     alimento.style.top = (alimento_y)+"px";
     alimento.style.left = (alimento_x)+"px";
+    if(document.getElementById("puntaje1")){
+        let puntaje1 = document.getElementById("puntaje1");
+        puntaje1.textContent = parseInt(puntaje1.textContent)+5;
+    }
 }
-posicion_azar();
 
 // connecion usuario 
 
 document.getElementById("enviar").addEventListener("click",function(event){
     usuario = document.getElementById("id_usuario").value;
     event.preventDefault();
-    document.getElementById("formulario").style.display = "none"
+    document.getElementById("formulario").style.display = "none";
     llamada_socket(usuario);
+    posicion_azar();
 });
 
 // socket.on("mensaje",function(msg){
@@ -91,7 +94,10 @@ function nuevo_participante(datos){
     for(let i = 0;i<datos.length;i++){
         // console.log(datos[i].id);
         usuarios.innerHTML += `<div>
-        <span id="id_usuario1">${datos[i].id} : </span><span id="puntaje1">1000</span>
+        <span id="id_usuario1">${datos[i].id} : </span><span id="puntaje1">0</span>
     </div>`;
     }
 }
+
+// conectando la puntuacion 
+
