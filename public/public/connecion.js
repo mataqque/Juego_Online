@@ -1,8 +1,8 @@
 var socket = io();
 
-var usuario;
+var usuario; // guardar usuario actual;
 var usuarios = document.getElementsByClassName("datos")[0];
-var configuracion = {id:""};
+var configuracion = [];
 // movimiento del cuadrado 
 var movimiento = "";
 var arriba = 0;abajo = 0;derecha = 0;izquierda = 0;
@@ -43,8 +43,9 @@ function colision(posicion_top){
         let width1 = cuadrado.getBoundingClientRect().width;
         let height1 =cuadrado.getBoundingClientRect().height;
         cuadrado.style.width = width1+3+"px";
-        cuadrado.style.height = height1+3+"px"
+        cuadrado.style.height = height1+3+"px";
         posicion_azar();
+
     }else{
         alimento.style.background = "black";
     }
@@ -68,29 +69,29 @@ posicion_azar();
 
 document.getElementById("enviar").addEventListener("click",function(event){
     usuario = document.getElementById("id_usuario").value;
-    document.getElementById("id_usuario1").textContent = usuario+` : `;
     event.preventDefault();
-    configuracion.id = usuario;
-    llamada_socket();
+    document.getElementById("formulario").style.display = "none"
+    llamada_socket(usuario);
 });
 
-socket.on("mensaje",function(msg){
-    nuevo_participante(msg);
-});
-
-function llamada_socket(){
-    socket.emit("mensaje",configuracion);
-    console.log(configuracion)
-    socket.on("mensaje",function(msg){
-        console.log(msg)
-        nuevo_participante(msg);
-    });
+// socket.on("mensaje",function(msg){
+//     nuevo_participante(msg);
+// });
+function llamada_socket(usuario){
+    socket.emit("mensaje",usuario);
 }
+    socket.on("mensaje",function(msg){
+        nuevo_participante(msg);
+        console.log(msg)
+        });
+
+var  guardar_inner; 
 function nuevo_participante(datos){
-    console.log(datos)
-    for(let i = 0;i<1;i++){
-        usuarios.innerHTML = `<div>
-        <span id="id_usuario1">${datos.id} : </span><span id="puntaje1">1000</span>
-    </div>`
+    usuarios.innerHTML = "";
+    for(let i = 0;i<datos.length;i++){
+        // console.log(datos[i].id);
+        usuarios.innerHTML += `<div>
+        <span id="id_usuario1">${datos[i].id} : </span><span id="puntaje1">1000</span>
+    </div>`;
     }
 }

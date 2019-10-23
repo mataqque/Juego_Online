@@ -18,9 +18,9 @@ app.get("/",function(req,res){
 
 socket.on("connection",function(io){
     io.on("mensaje",function(msg){
-        usuarios.push(msg)
-        console.log(msg)
-        socket.emit("mensaje",msg)
+        usuarios.push({id:msg})
+        console.log(usuarios)
+        socket.emit("mensaje",usuarios)
     });
 });
 
