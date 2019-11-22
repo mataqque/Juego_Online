@@ -2,7 +2,9 @@ var socket = io();
 
 var usuario; // guardar usuario actual;
 var usuarios = document.getElementsByClassName("datos")[0];
-var configuracion = [];
+var configuracion = [{id:"",puntaje:"",pelota:["",""],usuariopelota:[0,0]}];
+var puntaje1 = document.getElementById("puntaje1");
+var puntaje2 = 0;
 // movimiento del cuadrado 
 var movimiento = "";
 var arriba = 0;abajo = 0;derecha = 0;izquierda = 0;
@@ -10,23 +12,33 @@ var num = 4;
 var cuadrado = document.getElementsByClassName("cuadrado")[0];
 var alimento_x = 0
 var alimento_y = 0
+var coordenadax = 0
+var coordenaday = 0
 
 document.addEventListener("keyup",function(key){
     movimiento = key.key;
     if(movimiento == "ArrowUp"){
         let posicion_top = cuadrado.style.top = cordenada_arriba()+"px";
+        obtenerposicion()
         colision(posicion_top);
     }else if(movimiento == "ArrowDown"){
         let posicion_top = cuadrado.style.top = cordenada_abajo()+"px";
+        obtenerposicion()
         colision(posicion_top);
     }else if(movimiento == "ArrowLeft"){
         let posicion_top = cuadrado.style.left = cordenada_izquierda()+"px";
+        obtenerposicion();
         colision(posicion_top);
     }else if(movimiento == "ArrowRight"){
         let posicion_top= cuadrado.style.left = cordenada_derecha()+"px";
+        obtenerposicion()
         colision(posicion_top);
     }
 });
+function obtenerposicion(){
+    coordenaday = cuadrado.style.top
+    coordenadax = cuadrado.style.left
+}
 
 function cordenada_abajo(){ abajo = abajo + num ;arriba = abajo; return abajo;}
 function cordenada_arriba(){ arriba = arriba - num ; abajo = arriba; return arriba;}
@@ -45,9 +57,20 @@ function colision(posicion_top){
         cuadrado.style.width = width1+3+"px";
         cuadrado.style.height = height1+3+"px";
         posicion_azar();
-
+        configuracion[0].id = usuario;
+        configuracion[0].puntaje = puntaje2;
+        configuracion[0].pelota = [alimento_x,alimento_y];
+        configuracion[0].usuariopelota = [coordenadax,coordenaday];
+        
+        enviar_datos(configuracion)
+        
     }else{
-        alimento.style.background = "black";
+        configuracion[0].id = usuario;
+        configuracion[0].puntaje = puntaje2;
+        configuracion[0].pelota = [alimento_x,alimento_y];
+        configuracion[0].usuariopelota = [coordenadax,coordenaday]
+      
+        enviar_datos(configuracion)
     }
     
 }
@@ -64,6 +87,8 @@ function posicion_azar(){
     if(document.getElementById("puntaje1")){
         let puntaje1 = document.getElementById("puntaje1");
         puntaje1.textContent = parseInt(puntaje1.textContent)+5;
+        puntaje2 =  parseInt(document.getElementById("puntaje1").textContent)
+        socket.emit("sumar puntuacion",puntaje1.textContent);
     }
 }
 
@@ -85,19 +110,49 @@ function llamada_socket(usuario){
 }
     socket.on("mensaje",function(msg){
         nuevo_participante(msg);
-        console.log(msg)
         });
 
 var  guardar_inner; 
 function nuevo_participante(datos){
     usuarios.innerHTML = "";
     for(let i = 0;i<datos.length;i++){
-        // console.log(datos[i].id);
+    
         usuarios.innerHTML += `<div>
         <span id="id_usuario1">${datos[i].id} : </span><span id="puntaje1">0</span>
     </div>`;
     }
 }
-
+ 
 // conectando la puntuacion 
+socket.on("sumar puntuacion",function(msg){
+    if(document.getElementById("puntaje1")){
+        document.getElementById("puntaje1").textContent = msg
+    }
+});
 
+// envio de nombre/ puntaje / coordendas  ;
+function enviar_datos(config){
+    socket.emit("envio de datos", config);
+}
+
+socket.on("envio de datos",function(msg){
+    console.log(msg)
+    if(msg.length > 1){
+        for(let i=0;msg.length>i;i++){
+            if(document.getElementsByClassName("jugador "+i)[0]){
+                let cambiarpelota = document.getElementsByClassName("jugador "+i)[0]
+                document.getElementsByClassName("jugador "+i)[0].style.top = msg[i].usuariopelota[1]
+                document.getElementsByClassName("jugador "+i)[0].style.left = msg[i].usuariopelota[0]
+            }
+            if(!document.getElementsByClassName("jugador "+i)[0]){
+                let elemento = document.createElement("div");
+                elemento.className = "jugador "+i;
+                elemento.style.top = msg[i].usuariopelota[1]
+                elemento.style.left = msg[i].usuariopelota[0]
+                document.getElementsByClassName("game")[0].appendChild(elemento);
+                
+                }
+            }
+    }
+    
+});
