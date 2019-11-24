@@ -1,5 +1,5 @@
 var socket = io();
-
+var cantidad;
 var usuario; // guardar usuario actual;
 var usuarios = document.getElementsByClassName("datos")[0];
 var configuracion = [{id:"",puntaje:"",pelota:["",""],usuariopelota:[0,0]}];
@@ -9,11 +9,14 @@ var puntaje2 = 0;
 var movimiento = "";
 var arriba = 0;abajo = 0;derecha = 0;izquierda = 0;
 var num = 4;
-var cuadrado = document.getElementsByClassName("cuadrado")[0];
+var cuadrado;
 var alimento_x = 0
 var alimento_y = 0
 var coordenadax = 0
 var coordenaday = 0
+
+
+
 
 document.addEventListener("keyup",function(key){
     movimiento = key.key;
@@ -35,6 +38,7 @@ document.addEventListener("keyup",function(key){
         colision(posicion_top);
     }
 });
+
 function obtenerposicion(){
     coordenaday = cuadrado.style.top
     coordenadax = cuadrado.style.left
@@ -61,6 +65,7 @@ function colision(posicion_top){
         configuracion[0].puntaje = puntaje2;
         configuracion[0].pelota = [alimento_x,alimento_y];
         configuracion[0].usuariopelota = [coordenadax,coordenaday];
+        configuracion[0].estatura = [cuadrado.style.width,cuadrado.style.height]
         
         enviar_datos(configuracion)
         
@@ -68,8 +73,8 @@ function colision(posicion_top){
         configuracion[0].id = usuario;
         configuracion[0].puntaje = puntaje2;
         configuracion[0].pelota = [alimento_x,alimento_y];
-        configuracion[0].usuariopelota = [coordenadax,coordenaday]
-      
+        configuracion[0].usuariopelota = [coordenadax,coordenaday];
+        configuracion[0].estatura = [cuadrado.style.width,cuadrado.style.height]
         enviar_datos(configuracion)
     }
     
@@ -98,19 +103,53 @@ document.getElementById("enviar").addEventListener("click",function(event){
     usuario = document.getElementById("id_usuario").value;
     event.preventDefault();
     document.getElementById("formulario").style.display = "none";
-    llamada_socket(usuario);
+    // llamada_socket(usuario);
     posicion_azar();
+
+    let elementobola = document.createElement("div");
+    elementobola.className =  "jugador "+usuario;
+    elementobola.style.top = "0px";
+    elementobola.style.left = "0px";
+    document.getElementsByClassName("game")[0].appendChild(elementobola);
+    console.log(usuario)
+    cuadrado = document.getElementsByClassName("jugador "+usuario)[0];
+
+    configuracion[0].id = usuario;
+    configuracion[0].puntaje = puntaje2;
+    configuracion[0].pelota = [alimento_x,alimento_y];
+    configuracion[0].usuariopelota = [coordenadax,coordenaday];
+    configuracion[0].estatura = [cuadrado.style.width,cuadrado.style.height]
+    enviar_datos(configuracion);
+
+
 });
+
+   
 
 // socket.on("mensaje",function(msg){
 //     nuevo_participante(msg);
 // });
-function llamada_socket(usuario){
-    socket.emit("mensaje",usuario);
+function llamada_socket(){
+    socket.emit("mensaje",1);
 }
-    socket.on("mensaje",function(msg){
-        nuevo_participante(msg);
-        });
+llamada_socket()
+
+socket.on("mensaje",function(msg){
+    console.log(msg)
+    if(msg.length>0){
+        console.log("entro")
+        for(let i=0;msg.length > i;i++){
+            if(!document.getElementsByClassName("jugador "+msg[i].id)[0]){
+                let elemento = document.createElement("div");
+                elemento.className = "jugador "+msg[i].id;
+                elemento.style.top = msg[i].usuariopelota[1]
+                elemento.style.left = msg[i].usuariopelota[0]
+                document.getElementsByClassName("game")[0].appendChild(elemento);
+                }
+        }
+    }
+        // nuevo_participante(msg);
+});
 
 var  guardar_inner; 
 function nuevo_participante(datos){
@@ -132,27 +171,29 @@ socket.on("sumar puntuacion",function(msg){
 
 // envio de nombre/ puntaje / coordendas  ;
 function enviar_datos(config){
-    socket.emit("envio de datos", config);
+    socket.emit("envio de datos",config);
 }
 
 socket.on("envio de datos",function(msg){
     console.log(msg)
-    if(msg.length > 1){
         for(let i=0;msg.length>i;i++){
-            if(document.getElementsByClassName("jugador "+i)[0]){
-                let cambiarpelota = document.getElementsByClassName("jugador "+i)[0]
-                document.getElementsByClassName("jugador "+i)[0].style.top = msg[i].usuariopelota[1]
-                document.getElementsByClassName("jugador "+i)[0].style.left = msg[i].usuariopelota[0]
+            if(document.getElementsByClassName("jugador "+msg[i].id)[0]){
+                let cambiarpelota = document.getElementsByClassName("jugador "+msg[i].id)[0]
+                document.getElementsByClassName("jugador "+msg[i].id)[0].style.top = msg[i].usuariopelota[1]
+                document.getElementsByClassName("jugador "+msg[i].id)[0].style.left = msg[i].usuariopelota[0]
+                document.getElementsByClassName("jugador "+msg[i].id)[0].style.width = msg[i].estatura[0]
+                document.getElementsByClassName("jugador "+msg[i].id)[0].style.height = msg[i].estatura[1]
+
+                
             }
-            if(!document.getElementsByClassName("jugador "+i)[0]){
+            if(!document.getElementsByClassName("jugador "+msg[i].id)[0]){
                 let elemento = document.createElement("div");
-                elemento.className = "jugador "+i;
+                elemento.className = "jugador "+msg[i].id;
                 elemento.style.top = msg[i].usuariopelota[1]
                 elemento.style.left = msg[i].usuariopelota[0]
                 document.getElementsByClassName("game")[0].appendChild(elemento);
                 
                 }
             }
-    }
-    
 });
+
